@@ -20,8 +20,8 @@ table = dynamodb.Table('test6-DB-staging')
 
 response = table.get_item(
    Key={
-      'PK': '0',
-      'SK': '0'
+      'PK': 'COMP#0',
+      'SK': 'COMP#0'
    }
 )
 
@@ -29,7 +29,7 @@ data = str(response['Item']['companyEmail'])
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins="http://localhost:3001/",
+    allow_origins="https://main.dl072bg9si01x.amplifyapp.com/",
     allow_credentials=True,
     allow_methods=["GET"],
     allow_headers=["Content-Type","application/xml"],
