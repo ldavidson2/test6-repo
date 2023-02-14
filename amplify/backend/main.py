@@ -8,9 +8,9 @@ from pydantic import BaseModel
 
 app = FastAPI()
 dynamodb = boto3.resource('dynamodb', region_name="us-east-2",
-         aws_access_key_id="AKIAX3FHVXYSJO3DLKG3",
-         aws_secret_access_key= "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")
-table = dynamodb.Table('memorextest-dev')
+         aws_access_key_id="AKIAX3FHVXYSKFFYPGE7",
+         aws_secret_access_key= "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")
+table = dynamodb.Table('test6-DB-staging')
 
 
 
