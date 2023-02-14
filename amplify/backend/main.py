@@ -25,7 +25,7 @@ response = table.get_item(
    }
 )
 
-data = str(response['Item']['companyEmail'])
+data = str(response['Item']['companyName'])
 
 app.add_middleware(
     CORSMiddleware,
