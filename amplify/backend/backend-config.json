@@ -1,0 +1,8 @@
+{
+  "storage": {
+    "test6DB": {
+      "providerPlugin": "awscloudformation",
+      "service": "DynamoDB"
+    }
+  }
+}
