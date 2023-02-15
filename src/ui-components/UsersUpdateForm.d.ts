@@ -14,8 +14,10 @@ export declare type ValidationResponse = {
 };
 export declare type ValidationFunction<T> = (value: T, validationResponse: ValidationResponse) => ValidationResponse | Promise<ValidationResponse>;
 export declare type UsersUpdateFormInputValues = {
+    PK?: string;
     SK?: string;
     companyName?: string;
+    companyEmail?: string;
     companyNumber?: number;
     firstName?: string;
     lastName?: string;
@@ -29,11 +31,13 @@ export declare type UsersUpdateFormInputValues = {
     preferredContact?: string;
     dementiaLikelihood?: string;
     notes?: string;
-    companyEmail?: string;
+    tests?: string[];
 };
 export declare type UsersUpdateFormValidationValues = {
+    PK?: ValidationFunction<string>;
     SK?: ValidationFunction<string>;
     companyName?: ValidationFunction<string>;
+    companyEmail?: ValidationFunction<string>;
     companyNumber?: ValidationFunction<number>;
     firstName?: ValidationFunction<string>;
     lastName?: ValidationFunction<string>;
@@ -47,13 +51,15 @@ export declare type UsersUpdateFormValidationValues = {
     preferredContact?: ValidationFunction<string>;
     dementiaLikelihood?: ValidationFunction<string>;
     notes?: ValidationFunction<string>;
-    companyEmail?: ValidationFunction<string>;
+    tests?: ValidationFunction<string>;
 };
 export declare type PrimitiveOverrideProps<T> = Partial<T> & React.DOMAttributes<HTMLDivElement>;
 export declare type UsersUpdateFormOverridesProps = {
     UsersUpdateFormGrid?: PrimitiveOverrideProps<GridProps>;
+    PK?: PrimitiveOverrideProps<TextFieldProps>;
     SK?: PrimitiveOverrideProps<TextFieldProps>;
     companyName?: PrimitiveOverrideProps<TextFieldProps>;
+    companyEmail?: PrimitiveOverrideProps<TextFieldProps>;
     companyNumber?: PrimitiveOverrideProps<TextFieldProps>;
     firstName?: PrimitiveOverrideProps<TextFieldProps>;
     lastName?: PrimitiveOverrideProps<TextFieldProps>;
@@ -67,7 +73,7 @@ export declare type UsersUpdateFormOverridesProps = {
     preferredContact?: PrimitiveOverrideProps<TextFieldProps>;
     dementiaLikelihood?: PrimitiveOverrideProps<TextFieldProps>;
     notes?: PrimitiveOverrideProps<TextFieldProps>;
-    companyEmail?: PrimitiveOverrideProps<TextFieldProps>;
+    tests?: PrimitiveOverrideProps<TextFieldProps>;
 } & EscapeHatchProps;
 export declare type UsersUpdateFormProps = React.PropsWithChildren<{
     overrides?: UsersUpdateFormOverridesProps | undefined | null;

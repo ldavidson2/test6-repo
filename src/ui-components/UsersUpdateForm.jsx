@@ -6,11 +6,169 @@
 
 /* eslint-disable */
 import * as React from "react";
-import { Button, Flex, Grid, TextField } from "@aws-amplify/ui-react";
+import {
+  Badge,
+  Button,
+  Divider,
+  Flex,
+  Grid,
+  Icon,
+  ScrollView,
+  Text,
+  TextField,
+  useTheme,
+} from "@aws-amplify/ui-react";
 import { getOverrideProps } from "@aws-amplify/ui-react/internal";
 import { Users } from "../models";
 import { fetchByPath, validateField } from "./utils";
 import { DataStore } from "aws-amplify";
+function ArrayField({
+  items = [],
+  onChange,
+  label,
+  inputFieldRef,
+  children,
+  hasError,
+  setFieldValue,
+  currentFieldValue,
+  defaultFieldValue,
+  lengthLimit,
+  getBadgeText,
+}) {
+  const labelElement = <Text>{label}</Text>;
+  const { tokens } = useTheme();
+  const [selectedBadgeIndex, setSelectedBadgeIndex] = React.useState();
+  const [isEditing, setIsEditing] = React.useState();
+  React.useEffect(() => {
+    if (isEditing) {
+      inputFieldRef?.current?.focus();
+    }
+  }, [isEditing]);
+  const removeItem = async (removeIndex) => {
+    const newItems = items.filter((value, index) => index !== removeIndex);
+    await onChange(newItems);
+    setSelectedBadgeIndex(undefined);
+  };
+  const addItem = async () => {
+    if (
+      currentFieldValue !== undefined &&
+      currentFieldValue !== null &&
+      currentFieldValue !== "" &&
+      !hasError
+    ) {
+      const newItems = [...items];
+      if (selectedBadgeIndex !== undefined) {
+        newItems[selectedBadgeIndex] = currentFieldValue;
+        setSelectedBadgeIndex(undefined);
+      } else {
+        newItems.push(currentFieldValue);
+      }
+      await onChange(newItems);
+      setIsEditing(false);
+    }
+  };
+  const arraySection = (
+    <React.Fragment>
+      {!!items?.length && (
+        <ScrollView height="inherit" width="inherit" maxHeight={"7rem"}>
+          {items.map((value, index) => {
+            return (
+              <Badge
+                key={index}
+                style={{
+                  cursor: "pointer",
+                  alignItems: "center",
+                  marginRight: 3,
+                  marginTop: 3,
+                  backgroundColor:
+                    index === selectedBadgeIndex ? "#B8CEF9" : "",
+                }}
+                onClick={() => {
+                  setSelectedBadgeIndex(index);
+                  setFieldValue(items[index]);
+                  setIsEditing(true);
+                }}
+              >
+                {getBadgeText ? getBadgeText(value) : value.toString()}
+                <Icon
+                  style={{
+                    cursor: "pointer",
+                    paddingLeft: 3,
+                    width: 20,
+                    height: 20,
+                  }}
+                  viewBox={{ width: 20, height: 20 }}
+                  paths={[
+                    {
+                      d: "M10 10l5.09-5.09L10 10l5.09 5.09L10 10zm0 0L4.91 4.91 10 10l-5.09 5.09L10 10z",
+                      stroke: "black",
+                    },
+                  ]}
+                  ariaLabel="button"
+                  onClick={(event) => {
+                    event.stopPropagation();
+                    removeItem(index);
+                  }}
+                />
+              </Badge>
+            );
+          })}
+        </ScrollView>
+      )}
+      <Divider orientation="horizontal" marginTop={5} />
+    </React.Fragment>
+  );
+  if (lengthLimit !== undefined && items.length >= lengthLimit && !isEditing) {
+    return (
+      <React.Fragment>
+        {labelElement}
+        {arraySection}
+      </React.Fragment>
+    );
+  }
+  return (
+    <React.Fragment>
+      {labelElement}
+      {isEditing && children}
+      {!isEditing ? (
+        <>
+          <Button
+            onClick={() => {
+              setIsEditing(true);
+            }}
+          >
+            Add item
+          </Button>
+        </>
+      ) : (
+        <Flex justifyContent="flex-end">
+          {(currentFieldValue || isEditing) && (
+            <Button
+              children="Cancel"
+              type="button"
+              size="small"
+              onClick={() => {
+                setFieldValue(defaultFieldValue);
+                setIsEditing(false);
+                setSelectedBadgeIndex(undefined);
+              }}
+            ></Button>
+          )}
+          <Button
+            size="small"
+            variation="link"
+            color={tokens.colors.brand.primary[80]}
+            isDisabled={hasError}
+            onClick={addItem}
+          >
+            {selectedBadgeIndex !== undefined ? "Save" : "Add"}
+          </Button>
+        </Flex>
+      )}
+      {arraySection}
+    </React.Fragment>
+  );
+}
 export default function UsersUpdateForm(props) {
   const {
     id: idProp,
@@ -24,8 +182,10 @@ export default function UsersUpdateForm(props) {
     ...rest
   } = props;
   const initialValues = {
+    PK: "",
     SK: "",
     companyName: "",
+    companyEmail: "",
     companyNumber: "",
     firstName: "",
     lastName: "",
@@ -39,11 +199,15 @@ export default function UsersUpdateForm(props) {
     preferredContact: "",
     dementiaLikelihood: "",
     notes: "",
-    companyEmail: "",
+    tests: [],
   };
+  const [PK, setPK] = React.useState(initialValues.PK);
   const [SK, setSK] = React.useState(initialValues.SK);
   const [companyName, setCompanyName] = React.useState(
     initialValues.companyName
+  );
+  const [companyEmail, setCompanyEmail] = React.useState(
+    initialValues.companyEmail
   );
   const [companyNumber, setCompanyNumber] = React.useState(
     initialValues.companyNumber
@@ -70,16 +234,16 @@ export default function UsersUpdateForm(props) {
     initialValues.dementiaLikelihood
   );
   const [notes, setNotes] = React.useState(initialValues.notes);
-  const [companyEmail, setCompanyEmail] = React.useState(
-    initialValues.companyEmail
-  );
+  const [tests, setTests] = React.useState(initialValues.tests);
   const [errors, setErrors] = React.useState({});
   const resetStateValues = () => {
     const cleanValues = usersRecord
       ? { ...initialValues, ...usersRecord }
       : initialValues;
+    setPK(cleanValues.PK);
     setSK(cleanValues.SK);
     setCompanyName(cleanValues.companyName);
+    setCompanyEmail(cleanValues.companyEmail);
     setCompanyNumber(cleanValues.companyNumber);
     setFirstName(cleanValues.firstName);
     setLastName(cleanValues.lastName);
@@ -93,7 +257,8 @@ export default function UsersUpdateForm(props) {
     setPreferredContact(cleanValues.preferredContact);
     setDementiaLikelihood(cleanValues.dementiaLikelihood);
     setNotes(cleanValues.notes);
-    setCompanyEmail(cleanValues.companyEmail);
+    setTests(cleanValues.tests ?? []);
+    setCurrentTestsValue("");
     setErrors({});
   };
   const [usersRecord, setUsersRecord] = React.useState(users);
@@ -105,9 +270,13 @@ export default function UsersUpdateForm(props) {
     queryData();
   }, [idProp, users]);
   React.useEffect(resetStateValues, [usersRecord]);
+  const [currentTestsValue, setCurrentTestsValue] = React.useState("");
+  const testsRef = React.createRef();
   const validations = {
-    SK: [],
+    PK: [{ type: "Required" }],
+    SK: [{ type: "Required" }],
     companyName: [],
+    companyEmail: [],
     companyNumber: [],
     firstName: [],
     lastName: [],
@@ -121,7 +290,7 @@ export default function UsersUpdateForm(props) {
     preferredContact: [],
     dementiaLikelihood: [],
     notes: [],
-    companyEmail: [],
+    tests: [],
   };
   const runValidationTasks = async (
     fieldName,
@@ -148,8 +317,10 @@ export default function UsersUpdateForm(props) {
       onSubmit={async (event) => {
         event.preventDefault();
         let modelFields = {
+          PK,
           SK,
           companyName,
+          companyEmail,
           companyNumber,
           firstName,
           lastName,
@@ -163,7 +334,7 @@ export default function UsersUpdateForm(props) {
           preferredContact,
           dementiaLikelihood,
           notes,
-          companyEmail,
+          tests,
         };
         const validationResponses = await Promise.all(
           Object.keys(validations).reduce((promises, fieldName) => {
@@ -211,16 +382,18 @@ export default function UsersUpdateForm(props) {
       {...rest}
     >
       <TextField
-        label="Sk"
-        isRequired={false}
+        label="Pk"
+        isRequired={true}
         isReadOnly={false}
-        value={SK}
+        value={PK}
         onChange={(e) => {
           let { value } = e.target;
           if (onChange) {
             const modelFields = {
-              SK: value,
+              PK: value,
+              SK,
               companyName,
+              companyEmail,
               companyNumber,
               firstName,
               lastName,
@@ -234,7 +407,48 @@ export default function UsersUpdateForm(props) {
               preferredContact,
               dementiaLikelihood,
               notes,
+              tests,
+            };
+            const result = onChange(modelFields);
+            value = result?.PK ?? value;
+          }
+          if (errors.PK?.hasError) {
+            runValidationTasks("PK", value);
+          }
+          setPK(value);
+        }}
+        onBlur={() => runValidationTasks("PK", PK)}
+        errorMessage={errors.PK?.errorMessage}
+        hasError={errors.PK?.hasError}
+        {...getOverrideProps(overrides, "PK")}
+      ></TextField>
+      <TextField
+        label="Sk"
+        isRequired={true}
+        isReadOnly={false}
+        value={SK}
+        onChange={(e) => {
+          let { value } = e.target;
+          if (onChange) {
+            const modelFields = {
+              PK,
+              SK: value,
+              companyName,
               companyEmail,
+              companyNumber,
+              firstName,
+              lastName,
+              email,
+              phoneNumber,
+              specialty,
+              securityLevel,
+              clinicName,
+              dateOfBirth,
+              gender,
+              preferredContact,
+              dementiaLikelihood,
+              notes,
+              tests,
             };
             const result = onChange(modelFields);
             value = result?.SK ?? value;
@@ -258,8 +472,10 @@ export default function UsersUpdateForm(props) {
           let { value } = e.target;
           if (onChange) {
             const modelFields = {
+              PK,
               SK,
               companyName: value,
+              companyEmail,
               companyNumber,
               firstName,
               lastName,
@@ -273,7 +489,7 @@ export default function UsersUpdateForm(props) {
               preferredContact,
               dementiaLikelihood,
               notes,
-              companyEmail,
+              tests,
             };
             const result = onChange(modelFields);
             value = result?.companyName ?? value;
@@ -289,6 +505,47 @@ export default function UsersUpdateForm(props) {
         {...getOverrideProps(overrides, "companyName")}
       ></TextField>
       <TextField
+        label="Company email"
+        isRequired={false}
+        isReadOnly={false}
+        value={companyEmail}
+        onChange={(e) => {
+          let { value } = e.target;
+          if (onChange) {
+            const modelFields = {
+              PK,
+              SK,
+              companyName,
+              companyEmail: value,
+              companyNumber,
+              firstName,
+              lastName,
+              email,
+              phoneNumber,
+              specialty,
+              securityLevel,
+              clinicName,
+              dateOfBirth,
+              gender,
+              preferredContact,
+              dementiaLikelihood,
+              notes,
+              tests,
+            };
+            const result = onChange(modelFields);
+            value = result?.companyEmail ?? value;
+          }
+          if (errors.companyEmail?.hasError) {
+            runValidationTasks("companyEmail", value);
+          }
+          setCompanyEmail(value);
+        }}
+        onBlur={() => runValidationTasks("companyEmail", companyEmail)}
+        errorMessage={errors.companyEmail?.errorMessage}
+        hasError={errors.companyEmail?.hasError}
+        {...getOverrideProps(overrides, "companyEmail")}
+      ></TextField>
+      <TextField
         label="Company number"
         isRequired={false}
         isReadOnly={false}
@@ -301,8 +558,10 @@ export default function UsersUpdateForm(props) {
             : parseInt(e.target.value);
           if (onChange) {
             const modelFields = {
+              PK,
               SK,
               companyName,
+              companyEmail,
               companyNumber: value,
               firstName,
               lastName,
@@ -316,7 +575,7 @@ export default function UsersUpdateForm(props) {
               preferredContact,
               dementiaLikelihood,
               notes,
-              companyEmail,
+              tests,
             };
             const result = onChange(modelFields);
             value = result?.companyNumber ?? value;
@@ -340,8 +599,10 @@ export default function UsersUpdateForm(props) {
           let { value } = e.target;
           if (onChange) {
             const modelFields = {
+              PK,
               SK,
               companyName,
+              companyEmail,
               companyNumber,
               firstName: value,
               lastName,
@@ -355,7 +616,7 @@ export default function UsersUpdateForm(props) {
               preferredContact,
               dementiaLikelihood,
               notes,
-              companyEmail,
+              tests,
             };
             const result = onChange(modelFields);
             value = result?.firstName ?? value;
@@ -379,8 +640,10 @@ export default function UsersUpdateForm(props) {
           let { value } = e.target;
           if (onChange) {
             const modelFields = {
+              PK,
               SK,
               companyName,
+              companyEmail,
               companyNumber,
               firstName,
               lastName: value,
@@ -394,7 +657,7 @@ export default function UsersUpdateForm(props) {
               preferredContact,
               dementiaLikelihood,
               notes,
-              companyEmail,
+              tests,
             };
             const result = onChange(modelFields);
             value = result?.lastName ?? value;
@@ -418,8 +681,10 @@ export default function UsersUpdateForm(props) {
           let { value } = e.target;
           if (onChange) {
             const modelFields = {
+              PK,
               SK,
               companyName,
+              companyEmail,
               companyNumber,
               firstName,
               lastName,
@@ -433,7 +698,7 @@ export default function UsersUpdateForm(props) {
               preferredContact,
               dementiaLikelihood,
               notes,
-              companyEmail,
+              tests,
             };
             const result = onChange(modelFields);
             value = result?.email ?? value;
@@ -461,8 +726,10 @@ export default function UsersUpdateForm(props) {
             : parseInt(e.target.value);
           if (onChange) {
             const modelFields = {
+              PK,
               SK,
               companyName,
+              companyEmail,
               companyNumber,
               firstName,
               lastName,
@@ -476,7 +743,7 @@ export default function UsersUpdateForm(props) {
               preferredContact,
               dementiaLikelihood,
               notes,
-              companyEmail,
+              tests,
             };
             const result = onChange(modelFields);
             value = result?.phoneNumber ?? value;
@@ -500,8 +767,10 @@ export default function UsersUpdateForm(props) {
           let { value } = e.target;
           if (onChange) {
             const modelFields = {
+              PK,
               SK,
               companyName,
+              companyEmail,
               companyNumber,
               firstName,
               lastName,
@@ -515,7 +784,7 @@ export default function UsersUpdateForm(props) {
               preferredContact,
               dementiaLikelihood,
               notes,
-              companyEmail,
+              tests,
             };
             const result = onChange(modelFields);
             value = result?.specialty ?? value;
@@ -543,8 +812,10 @@ export default function UsersUpdateForm(props) {
             : parseInt(e.target.value);
           if (onChange) {
             const modelFields = {
+              PK,
               SK,
               companyName,
+              companyEmail,
               companyNumber,
               firstName,
               lastName,
@@ -558,7 +829,7 @@ export default function UsersUpdateForm(props) {
               preferredContact,
               dementiaLikelihood,
               notes,
-              companyEmail,
+              tests,
             };
             const result = onChange(modelFields);
             value = result?.securityLevel ?? value;
@@ -582,8 +853,10 @@ export default function UsersUpdateForm(props) {
           let { value } = e.target;
           if (onChange) {
             const modelFields = {
+              PK,
               SK,
               companyName,
+              companyEmail,
               companyNumber,
               firstName,
               lastName,
@@ -597,7 +870,7 @@ export default function UsersUpdateForm(props) {
               preferredContact,
               dementiaLikelihood,
               notes,
-              companyEmail,
+              tests,
             };
             const result = onChange(modelFields);
             value = result?.clinicName ?? value;
@@ -616,14 +889,15 @@ export default function UsersUpdateForm(props) {
         label="Date of birth"
         isRequired={false}
         isReadOnly={false}
-        type="date"
         value={dateOfBirth}
         onChange={(e) => {
           let { value } = e.target;
           if (onChange) {
             const modelFields = {
+              PK,
               SK,
               companyName,
+              companyEmail,
               companyNumber,
               firstName,
               lastName,
@@ -637,7 +911,7 @@ export default function UsersUpdateForm(props) {
               preferredContact,
               dementiaLikelihood,
               notes,
-              companyEmail,
+              tests,
             };
             const result = onChange(modelFields);
             value = result?.dateOfBirth ?? value;
@@ -661,8 +935,10 @@ export default function UsersUpdateForm(props) {
           let { value } = e.target;
           if (onChange) {
             const modelFields = {
+              PK,
               SK,
               companyName,
+              companyEmail,
               companyNumber,
               firstName,
               lastName,
@@ -676,7 +952,7 @@ export default function UsersUpdateForm(props) {
               preferredContact,
               dementiaLikelihood,
               notes,
-              companyEmail,
+              tests,
             };
             const result = onChange(modelFields);
             value = result?.gender ?? value;
@@ -700,8 +976,10 @@ export default function UsersUpdateForm(props) {
           let { value } = e.target;
           if (onChange) {
             const modelFields = {
+              PK,
               SK,
               companyName,
+              companyEmail,
               companyNumber,
               firstName,
               lastName,
@@ -715,7 +993,7 @@ export default function UsersUpdateForm(props) {
               preferredContact: value,
               dementiaLikelihood,
               notes,
-              companyEmail,
+              tests,
             };
             const result = onChange(modelFields);
             value = result?.preferredContact ?? value;
@@ -739,8 +1017,10 @@ export default function UsersUpdateForm(props) {
           let { value } = e.target;
           if (onChange) {
             const modelFields = {
+              PK,
               SK,
               companyName,
+              companyEmail,
               companyNumber,
               firstName,
               lastName,
@@ -754,7 +1034,7 @@ export default function UsersUpdateForm(props) {
               preferredContact,
               dementiaLikelihood: value,
               notes,
-              companyEmail,
+              tests,
             };
             const result = onChange(modelFields);
             value = result?.dementiaLikelihood ?? value;
@@ -780,8 +1060,10 @@ export default function UsersUpdateForm(props) {
           let { value } = e.target;
           if (onChange) {
             const modelFields = {
+              PK,
               SK,
               companyName,
+              companyEmail,
               companyNumber,
               firstName,
               lastName,
@@ -795,7 +1077,7 @@ export default function UsersUpdateForm(props) {
               preferredContact,
               dementiaLikelihood,
               notes: value,
-              companyEmail,
+              tests,
             };
             const result = onChange(modelFields);
             value = result?.notes ?? value;
@@ -810,17 +1092,15 @@ export default function UsersUpdateForm(props) {
         hasError={errors.notes?.hasError}
         {...getOverrideProps(overrides, "notes")}
       ></TextField>
-      <TextField
-        label="Company email"
-        isRequired={false}
-        isReadOnly={false}
-        value={companyEmail}
-        onChange={(e) => {
-          let { value } = e.target;
+      <ArrayField
+        onChange={async (items) => {
+          let values = items;
           if (onChange) {
             const modelFields = {
+              PK,
               SK,
               companyName,
+              companyEmail,
               companyNumber,
               firstName,
               lastName,
@@ -834,21 +1114,42 @@ export default function UsersUpdateForm(props) {
               preferredContact,
               dementiaLikelihood,
               notes,
-              companyEmail: value,
+              tests: values,
             };
             const result = onChange(modelFields);
-            value = result?.companyEmail ?? value;
+            values = result?.tests ?? values;
           }
-          if (errors.companyEmail?.hasError) {
-            runValidationTasks("companyEmail", value);
-          }
-          setCompanyEmail(value);
+          setTests(values);
+          setCurrentTestsValue("");
         }}
-        onBlur={() => runValidationTasks("companyEmail", companyEmail)}
-        errorMessage={errors.companyEmail?.errorMessage}
-        hasError={errors.companyEmail?.hasError}
-        {...getOverrideProps(overrides, "companyEmail")}
-      ></TextField>
+        currentFieldValue={currentTestsValue}
+        label={"Tests"}
+        items={tests}
+        hasError={errors.tests?.hasError}
+        setFieldValue={setCurrentTestsValue}
+        inputFieldRef={testsRef}
+        defaultFieldValue={""}
+      >
+        <TextField
+          label="Tests"
+          isRequired={false}
+          isReadOnly={false}
+          value={currentTestsValue}
+          onChange={(e) => {
+            let { value } = e.target;
+            if (errors.tests?.hasError) {
+              runValidationTasks("tests", value);
+            }
+            setCurrentTestsValue(value);
+          }}
+          onBlur={() => runValidationTasks("tests", currentTestsValue)}
+          errorMessage={errors.tests?.errorMessage}
+          hasError={errors.tests?.hasError}
+          ref={testsRef}
+          labelHidden={true}
+          {...getOverrideProps(overrides, "tests")}
+        ></TextField>
+      </ArrayField>
       <Flex
         justifyContent="space-between"
         {...getOverrideProps(overrides, "CTAFlex")}

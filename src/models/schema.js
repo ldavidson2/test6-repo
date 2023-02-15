@@ -10,15 +10,29 @@ export const schema = {
                     "isRequired": true,
                     "attributes": []
                 },
+                "PK": {
+                    "name": "PK",
+                    "isArray": false,
+                    "type": "String",
+                    "isRequired": true,
+                    "attributes": []
+                },
                 "SK": {
                     "name": "SK",
+                    "isArray": false,
+                    "type": "String",
+                    "isRequired": true,
+                    "attributes": []
+                },
+                "companyName": {
+                    "name": "companyName",
                     "isArray": false,
                     "type": "String",
                     "isRequired": false,
                     "attributes": []
                 },
-                "companyName": {
-                    "name": "companyName",
+                "companyEmail": {
+                    "name": "companyEmail",
                     "isArray": false,
                     "type": "String",
                     "isRequired": false,
@@ -83,7 +97,7 @@ export const schema = {
                 "dateOfBirth": {
                     "name": "dateOfBirth",
                     "isArray": false,
-                    "type": "AWSDate",
+                    "type": "String",
                     "isRequired": false,
                     "attributes": []
                 },
@@ -117,19 +131,11 @@ export const schema = {
                 },
                 "tests": {
                     "name": "tests",
-                    "isArray": false,
-                    "type": {
-                        "nonModel": "Tests"
-                    },
-                    "isRequired": false,
-                    "attributes": []
-                },
-                "companyEmail": {
-                    "name": "companyEmail",
-                    "isArray": false,
+                    "isArray": true,
                     "type": "String",
                     "isRequired": false,
-                    "attributes": []
+                    "attributes": [],
+                    "isArrayNullable": true
                 },
                 "createdAt": {
                     "name": "createdAt",
@@ -204,5 +210,5 @@ export const schema = {
         }
     },
     "codegenVersion": "3.3.5",
-    "version": "fa0511a51ba6ef51ebaefbb0d951fe6c"
+    "version": "83ea149c62e64e4c0f62795f1ea5402c"
 };

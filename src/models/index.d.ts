@@ -26,8 +26,10 @@ type EagerUsers = {
     readOnlyFields: 'createdAt' | 'updatedAt';
   };
   readonly id: string;
-  readonly SK?: string | null;
+  readonly PK: string;
+  readonly SK: string;
   readonly companyName?: string | null;
+  readonly companyEmail?: string | null;
   readonly companyNumber?: number | null;
   readonly firstName?: string | null;
   readonly lastName?: string | null;
@@ -41,8 +43,7 @@ type EagerUsers = {
   readonly preferredContact?: string | null;
   readonly dementiaLikelihood?: string | null;
   readonly notes?: string | null;
-  readonly tests?: Tests | null;
-  readonly companyEmail?: string | null;
+  readonly tests?: (string | null)[] | null;
   readonly createdAt?: string | null;
   readonly updatedAt?: string | null;
 }
@@ -53,8 +54,10 @@ type LazyUsers = {
     readOnlyFields: 'createdAt' | 'updatedAt';
   };
   readonly id: string;
-  readonly SK?: string | null;
+  readonly PK: string;
+  readonly SK: string;
   readonly companyName?: string | null;
+  readonly companyEmail?: string | null;
   readonly companyNumber?: number | null;
   readonly firstName?: string | null;
   readonly lastName?: string | null;
@@ -68,8 +71,7 @@ type LazyUsers = {
   readonly preferredContact?: string | null;
   readonly dementiaLikelihood?: string | null;
   readonly notes?: string | null;
-  readonly tests?: Tests | null;
-  readonly companyEmail?: string | null;
+  readonly tests?: (string | null)[] | null;
   readonly createdAt?: string | null;
   readonly updatedAt?: string | null;
 }
