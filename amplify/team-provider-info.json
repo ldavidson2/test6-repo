@@ -17,6 +17,9 @@
       },
       "storage": {
         "test6DB": {}
+      },
+      "api": {
+        "test6repo": {}
       }
     }
   }

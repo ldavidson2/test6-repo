@@ -5,9 +5,10 @@ type Tests {
 }
 
 type Users @model @auth(rules: [{allow: public}]) {
-  id: ID!
-  SK: String
+  PK: String!
+  SK: String!
   companyName: String
+  companyEmail: String
   companyNumber: Int
   firstName: String
   lastName: String
@@ -16,11 +17,10 @@ type Users @model @auth(rules: [{allow: public}]) {
   specialty: String
   securityLevel: Int
   clinicName: String
-  dateOfBirth: AWSDate
+  dateOfBirth: String
   gender: String
   preferredContact: String
   dementiaLikelihood: String
   notes: String
-  tests: Tests
-  companyEmail: String
+  tests: [String]
 }
