@@ -1,0 +1,26 @@
+type Tests {
+  dateSent: AWSDate
+  testStatus: String
+  score: Int
+}
+
+type Users @model @auth(rules: [{allow: public}]) {
+  id: ID!
+  SK: String
+  companyName: String
+  companyNumber: Int
+  firstName: String
+  lastName: String
+  email: String
+  phoneNumber: Int
+  specialty: String
+  securityLevel: Int
+  clinicName: String
+  dateOfBirth: AWSDate
+  gender: String
+  preferredContact: String
+  dementiaLikelihood: String
+  notes: String
+  tests: Tests
+  companyEmail: String
+}
